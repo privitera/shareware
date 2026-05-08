@@ -5,65 +5,42 @@
 //! `default-features = false` when embedding `arcade-cart` in another
 //! egui app that runs its own event loop.
 //!
-//! ## Keyboard mapping
+//! ## Default keyboard mapping
 //!
-//! - `A` / `D`: decrement / increment `rotation_left`
-//! - `←` / `→`: decrement / increment `rotation_right`
-//! - `rotation` is the sum of left + right
-//! - `Space`: `action_pressed`
-//! - `Esc`: `menu_requested` (return to menu, or exit single-game)
-//! - `Q`: `exit_requested` (triggers CRT shutdown in console mode)
+//! See [`crate::KeyboardInput`] for the full table.
+//!
+//! ## Custom input sources
+//!
+//! [`run_single_with`] / [`run_console_with`] take any
+//! [`crate::InputSource`] — gamepad, USB rotary, scripted replay,
+//! whatever. The plain [`run_single`] / [`run_console`] use
+//! [`crate::KeyboardInput`] by default.
 
 use std::time::Instant;
 
-use egui::{Context, Key, ViewportBuilder, ViewportCommand};
+use egui::{Context, ViewportBuilder, ViewportCommand};
 
-use crate::cart::{Game, Input};
+use crate::cart::{Game, InputSource, KeyboardInput};
 use crate::config::ConsoleConfig;
 use crate::console::Console;
-
-/// Radians per second when a rotation key is held.
-const ROTATION_SPEED: f32 = 3.0;
 
 /// Default standalone window size — portrait, half-scale of the 1080×1920
 /// design reference, fits comfortably on common landscape monitors.
 const DEFAULT_WINDOW: [f32; 2] = [540.0, 960.0];
 
-fn read_input(ctx: &Context, dt: f32) -> Input {
-    let mut input = Input::default();
-    ctx.input(|i| {
-        if i.key_down(Key::A) {
-            input.rotation_left -= ROTATION_SPEED * dt;
-        }
-        if i.key_down(Key::D) {
-            input.rotation_left += ROTATION_SPEED * dt;
-        }
-        if i.key_down(Key::ArrowLeft) {
-            input.rotation_right -= ROTATION_SPEED * dt;
-        }
-        if i.key_down(Key::ArrowRight) {
-            input.rotation_right += ROTATION_SPEED * dt;
-        }
-        input.rotation = input.rotation_left + input.rotation_right;
-        input.action_pressed = i.key_pressed(Key::Space);
-        input.menu_requested = i.key_pressed(Key::Escape);
-        input.exit_requested = i.key_pressed(Key::Q);
-    });
-    input
-}
-
-struct GameApp<G: Game> {
+struct GameApp<G: Game, I: InputSource> {
     game: G,
+    input: I,
     last_frame: Instant,
 }
 
-impl<G: Game> eframe::App for GameApp<G> {
+impl<G: Game, I: InputSource> eframe::App for GameApp<G, I> {
     fn logic(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
         let now = Instant::now();
         let dt = (now - self.last_frame).as_secs_f32().min(0.1);
         self.last_frame = now;
 
-        let input = read_input(ctx, dt);
+        let input = self.input.poll(ctx, dt);
         let done = self.game.update(dt, &input);
 
         if done {
@@ -80,14 +57,29 @@ impl<G: Game> eframe::App for GameApp<G> {
     }
 }
 
-/// Open a window and run a single cart. Blocks until the window is closed
-/// or the cart's [`Game::update`] returns `true`.
+/// Open a window and run a single cart with the default keyboard input.
 ///
 /// # Errors
 ///
 /// Returns whatever [`eframe::run_native`] returns (mostly windowing /
 /// graphics-context failures).
 pub fn run_single<G: Game + 'static>(game: G) -> eframe::Result<()> {
+    run_single_with(game, KeyboardInput::default())
+}
+
+/// Open a window and run a single cart with a caller-supplied input source.
+///
+/// Use this to plug in a gamepad, real arcade controls, a USB rotary, a
+/// replay harness, or any combination thereof.
+///
+/// # Errors
+///
+/// Returns whatever [`eframe::run_native`] returns.
+pub fn run_single_with<G, I>(game: G, input: I) -> eframe::Result<()>
+where
+    G: Game + 'static,
+    I: InputSource + 'static,
+{
     let options = eframe::NativeOptions {
         viewport: ViewportBuilder::default()
             .with_inner_size(DEFAULT_WINDOW)
@@ -101,17 +93,36 @@ pub fn run_single<G: Game + 'static>(game: G) -> eframe::Result<()> {
             egui_extras::install_image_loaders(&cc.egui_ctx);
             Ok(Box::new(GameApp {
                 game,
+                input,
                 last_frame: Instant::now(),
             }) as Box<dyn eframe::App>)
         }),
     )
 }
 
-/// Open a window and run the full console (menu + carts + CRT shutdown).
+/// Open a window and run the full console (menu + carts + CRT shutdown)
+/// with the default keyboard input.
 ///
 /// # Errors
 ///
 /// Returns whatever [`eframe::run_native`] returns.
 pub fn run_console(games: Vec<Box<dyn Game>>, config: ConsoleConfig) -> eframe::Result<()> {
-    run_single(Console::new(games, config))
+    run_console_with(games, config, KeyboardInput::default())
+}
+
+/// Open a window and run the full console with a caller-supplied input
+/// source.
+///
+/// # Errors
+///
+/// Returns whatever [`eframe::run_native`] returns.
+pub fn run_console_with<I>(
+    games: Vec<Box<dyn Game>>,
+    config: ConsoleConfig,
+    input: I,
+) -> eframe::Result<()>
+where
+    I: InputSource + 'static,
+{
+    run_single_with(Console::new(games, config), input)
 }

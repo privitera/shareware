@@ -38,19 +38,54 @@ cargo run -p etch
 
 ## Keyboard controls
 
-The standalone runner maps keys to the rotational input model:
+The default keyboard input source treats each half of the keyboard as its own
+"rotary encoder + button," matching the impulse stove's per-encoder click
+hardware:
 
-| Key            | Action                                    |
-|----------------|-------------------------------------------|
-| `A` / `D`      | Decrement / increment `rotation_left`     |
-| `←` / `→`      | Decrement / increment `rotation_right`    |
-| `rotation`     | Sum of left + right (used by 1P games)    |
-| `Space`        | Action button                             |
-| `Esc`          | Return to menu (or exit single-game)      |
-| `Q`            | Trigger CRT shutdown + exit (cabinet)     |
+| Key       | Maps to                                         |
+|-----------|-------------------------------------------------|
+| `A` / `D` | `rotation_left` − / + (P1 / left-side encoder)  |
+| `←` / `→` | `rotation_right` − / + (P2 / right-side encoder)|
+| `Tab`     | `action_pressed_left` (P1 click)                |
+| `Enter`   | `action_pressed_right` (P2 click)               |
+| `Space`   | `action_pressed` only — neutral / shared button |
+| `Esc`     | `menu_requested` (return to home / exit single) |
+| `Q`       | `exit_requested` (CRT shutdown + exit cabinet)  |
 
-In the cabinet, the home screen uses `rotation` to scroll the menu and `Space`
-to start a game.
+`rotation = rotation_left + rotation_right`, and `action_pressed` is the OR
+of `Space`, `Tab`, and `Enter`. So **1P games** play comfortably with one
+half of the keyboard (just A/D + Space, or just ←/→ + Space). **2P games**
+use the two halves independently — A/D + Tab for P1, ←/→ + Enter for P2.
+
+> egui doesn't expose `LShift`/`RShift` as distinct keys (Shift is a modifier),
+> so `Tab` and `Enter` were chosen as geographically left/right action keys
+> that egui *does* expose.
+
+## Custom input sources
+
+The runner accepts any [`InputSource`](./arcade-cart/src/cart.rs) — gamepad,
+USB rotary encoder, real arcade hardware, scripted replay harness, hybrid
+combos, whatever. The default is `KeyboardInput`; swap in your own with the
+`_with` variants:
+
+```rust
+use arcade_cart::{Console, ConsoleConfig, Game, InputSource, runner};
+
+struct MyInput { /* ... */ }
+impl InputSource for MyInput { /* poll() */ }
+
+runner::run_console_with(games, ConsoleConfig::default(), MyInput::new())?;
+```
+
+A working **gamepad example** using `gilrs` ships in
+[`cabinet/examples/gamepad.rs`](./cabinet/examples/gamepad.rs):
+
+```bash
+cargo run --example gamepad -p cabinet
+```
+
+It maps left/right analog sticks to `rotation_left`/`rotation_right` and the
+South/West/East face buttons to the per-player action buttons.
 
 ## The carts
 

@@ -37,7 +37,7 @@ mod shutdown;
 #[cfg(feature = "runner")]
 pub mod runner;
 
-pub use cart::{Game, Input, Rng};
+pub use cart::{Game, Input, InputSource, KeyboardInput, Rng};
 pub use config::ConsoleConfig;
 pub use console::Console;
 pub use shutdown::Shutdown;

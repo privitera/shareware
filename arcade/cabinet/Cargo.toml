@@ -14,3 +14,10 @@ pong = { path = "../pong" }
 breakout = { path = "../breakout" }
 snake = { path = "../snake" }
 etch = { path = "../etch" }
+
+[dev-dependencies]
+# Example-only: the gamepad example uses gilrs to map a connected
+# controller to the InputSource trait. Not pulled by default.
+gilrs = "0.11"
+egui = { workspace = true }
+
