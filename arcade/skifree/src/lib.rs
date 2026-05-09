@@ -600,6 +600,12 @@ impl Game for SkiFree {
             self.boost_timer = BOOST_DURATION;
         }
 
+        // "Face straight down" key, like the original SkiFree.
+        if input.orient_down {
+            self.direction = SkierDirection::South;
+            self.rotation_accumulator = 0.0;
+        }
+
         let capped_rotation = input.rotation.clamp(-TURN_THRESHOLD * 1.5, TURN_THRESHOLD * 1.5);
         self.rotation_accumulator += capped_rotation;
 
@@ -867,7 +873,7 @@ impl Game for SkiFree {
         painter.text(
             Pos2::new(rect.center().x, rect.max.y - 50.0 * uniform),
             egui::Align2::CENTER_CENTER,
-            "STEER: ROTATE  •  BOOST: PRESS  •  MENU: ESC",
+            "STEER: ROTATE  •  ↓: STRAIGHT  •  BOOST: PRESS  •  MENU: ESC",
             egui::FontId::proportional(22.0 * uniform),
             Color32::GRAY,
         );

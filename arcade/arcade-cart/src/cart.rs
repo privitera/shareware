@@ -76,6 +76,11 @@ pub struct Input {
     /// Per-player action button — right side (P2). See [`action_pressed_left`].
     pub action_pressed_right: bool,
 
+    /// Hint to snap orientation toward "down" / south. Used by directional
+    /// games (e.g. skifree's "face straight downhill" key from the original).
+    /// Most carts ignore it. Default `false`.
+    pub orient_down: bool,
+
     /// Host requests the cart return to the home menu (e.g. game-over hotkey).
     pub menu_requested: bool,
 
@@ -146,15 +151,16 @@ pub trait InputSource: Send {
 ///
 /// Each "side" of the keyboard simulates a rotary encoder:
 ///
-/// | Key       | Effect                             |
-/// |-----------|------------------------------------|
-/// | `A` / `D` | `rotation_left` − / +              |
-/// | `←` / `→` | `rotation_right` − / +             |
-/// | `Tab`     | `action_pressed_left` (P1 click)   |
-/// | `Enter`   | `action_pressed_right` (P2 click)  |
-/// | `Space`   | `action_pressed` only (shared/1P)  |
-/// | `Esc`     | `menu_requested`                   |
-/// | `Q`       | `exit_requested`                   |
+/// | Key         | Effect                             |
+/// |-------------|------------------------------------|
+/// | `A` / `D`   | `rotation_left` − / +              |
+/// | `←` / `→`   | `rotation_right` − / +             |
+/// | `S` or `↓`  | `orient_down` (face south / straight down) |
+/// | `Tab`       | `action_pressed_left` (P1 click)   |
+/// | `Enter`     | `action_pressed_right` (P2 click)  |
+/// | `Space`     | `action_pressed` only (shared/1P)  |
+/// | `Esc`       | `menu_requested` (or exit at home) |
+/// | `Q`         | `exit_requested`                   |
 ///
 /// `action_pressed` is the OR of `Space`, `Tab`, and `Enter` — 1P games
 /// reading only `action_pressed` accept any of those keys. egui doesn't
@@ -195,6 +201,7 @@ impl InputSource for KeyboardInput {
                 || input.action_pressed_left
                 || input.action_pressed_right;
 
+            input.orient_down = i.key_pressed(Key::ArrowDown) || i.key_pressed(Key::S);
             input.menu_requested = i.key_pressed(Key::Escape);
             input.exit_requested = i.key_pressed(Key::Q);
         });

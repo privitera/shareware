@@ -56,6 +56,13 @@ impl Game for Console {
 
         match &mut self.state {
             State::Menu(menu) => {
+                // Esc at the home screen has nowhere to back out to —
+                // treat it as a full exit so the menu's "press Esc to
+                // exit" footer works as advertised.
+                if input.menu_requested {
+                    self.shutdown.start();
+                    return false;
+                }
                 if let Some(idx) = menu.update(input, self.games.len()) {
                     self.state = State::Playing(idx);
                 }

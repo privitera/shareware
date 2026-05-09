@@ -15,6 +15,7 @@
 //! | West button (X / □)     | `action_pressed_left`   |
 //! | East button (B / ○)     | `action_pressed_right`  |
 //! | South button (A / ×)    | `action_pressed` only   |
+//! | D-pad down              | `orient_down` (skifree's "face downhill") |
 //! | Select / Back           | `menu_requested`        |
 //! | Start / Mode            | `exit_requested`        |
 //!
@@ -51,12 +52,14 @@ impl InputSource for GamepadInput {
         let mut east_pressed = false;
         let mut select_pressed = false;
         let mut start_pressed = false;
+        let mut dpad_down_pressed = false;
         while let Some(gilrs::Event { event, .. }) = self.gilrs.next_event() {
             if let EventType::ButtonPressed(button, _) = event {
                 match button {
                     Button::South => south_pressed = true,
                     Button::West => west_pressed = true,
                     Button::East => east_pressed = true,
+                    Button::DPadDown => dpad_down_pressed = true,
                     Button::Select => select_pressed = true,
                     Button::Start | Button::Mode => start_pressed = true,
                     _ => {}
@@ -80,6 +83,7 @@ impl InputSource for GamepadInput {
         input.action_pressed_left = west_pressed;
         input.action_pressed_right = east_pressed;
         input.action_pressed = south_pressed || west_pressed || east_pressed;
+        input.orient_down = dpad_down_pressed;
         input.menu_requested = select_pressed;
         input.exit_requested = start_pressed;
 
