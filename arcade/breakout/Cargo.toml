@@ -1,0 +1,12 @@
+[package]
+name = "breakout"
+description = "Cartridge port of Breakout — paddle, ball, bricks"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+arcade-cart = { path = "../arcade-cart" }
+egui.workspace = true

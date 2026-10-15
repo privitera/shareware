@@ -1,0 +1,23 @@
+[package]
+name = "cabinet"
+description = "The full shareware arcade — all five carts in one binary, with home screen and CRT shutdown"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+arcade-cart = { path = "../arcade-cart" }
+skifree = { path = "../skifree" }
+pong = { path = "../pong" }
+breakout = { path = "../breakout" }
+snake = { path = "../snake" }
+etch = { path = "../etch" }
+
+[dev-dependencies]
+# Example-only: the gamepad example uses gilrs to map a connected
+# controller to the InputSource trait. Not pulled by default.
+gilrs = "0.11"
+egui = { workspace = true }
+

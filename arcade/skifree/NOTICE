@@ -1,0 +1,24 @@
+SkiFree cartridge — attribution
+================================
+
+This crate is a Rust homage to:
+
+    Chris Pirih, "SkiFree" (1991)
+    Originally distributed in Microsoft Entertainment Pack 3 for Windows.
+
+Sprite assets in `assets/`:
+
+    - sprite-characters.png
+    - skifree-objects.png
+
+are sourced from the open-source JavaScript port:
+
+    Dan Hough, basicallydan/skifree.js
+    https://github.com/basicallydan/skifree.js
+    MIT License
+
+The Rust port and all original code in this crate are
+Copyright (c) 2026 Peter Privitera, MIT licensed.
+
+Distributed in the spirit of preservation and homage. No affiliation with
+or endorsement by Microsoft, Chris Pirih, or Dan Hough is implied.
