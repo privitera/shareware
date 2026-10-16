@@ -1,0 +1,43 @@
+name: arcade release
+
+# Pushing a tag like arcade-v0.1.0 builds the cabinet as a universal macOS
+# binary and publishes it as a GitHub release, which the Homebrew formula in
+# privitera/homebrew-tap downloads.
+on:
+  push:
+    tags: ["arcade-v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  macos:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: arcade
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      # Two steps: without a toolchain name, `toolchain install` ignores --target.
+      - name: Install the pinned toolchain for both Mac architectures
+        run: |
+          rustup toolchain install --profile minimal
+          rustup target add aarch64-apple-darwin x86_64-apple-darwin
+
+      - name: Build a universal binary
+        run: |
+          cargo build --release --locked -p cabinet --target aarch64-apple-darwin --target x86_64-apple-darwin
+          mkdir dist
+          lipo -create -output dist/arcade target/aarch64-apple-darwin/release/cabinet target/x86_64-apple-darwin/release/cabinet
+          codesign --force --sign - dist/arcade  # ad-hoc: the linker only signs the arm64 slice
+          cp LICENSE skifree/NOTICE dist/
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${GITHUB_REF_NAME#arcade-v}"
+          tarball="arcade-$version-macos.tar.gz"
+          tar -czf "$tarball" -C dist arcade LICENSE NOTICE
+          gh release create "$GITHUB_REF_NAME" "$tarball" --title "arcade $version" --generate-notes

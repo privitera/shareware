@@ -20,6 +20,15 @@ animation when you exit.
                                   cargo run -p cabinet
 ```
 
+## Install on a Mac
+
+```bash
+brew install privitera/tap/arcade
+arcade
+```
+
+A prebuilt universal binary (Apple silicon and Intel), so no Rust needed. Keep the full `privitera/tap/arcade` name: Homebrew only loads formulae from third-party taps you've trusted, and installing by full name trusts this one. Uninstall with `brew uninstall arcade`.
+
 ## Quick start
 
 ```bash
@@ -145,6 +154,7 @@ hosts can rely on pixel-for-pixel parity at the native target.
 ```
 arcade/
 ├── README.md
+├── LICENSE
 ├── Cargo.toml             # workspace
 ├── rust-toolchain.toml    # pinned to 1.94 (egui 0.34 MSRV)
 │
@@ -181,9 +191,21 @@ arcade/
 - [ ] Touch input mapping (mouse/touch drag → rotation).
 - [ ] Save state per-cart (high scores).
 
+## Releasing
+
+1. Bump `version` in `Cargo.toml` and build once so `Cargo.lock` follows.
+   Commit, then tag and push:
+   `git tag -a arcade-vX.Y.Z -m "arcade X.Y.Z" && git push origin arcade-vX.Y.Z`.
+   The [release workflow](../.github/workflows/arcade-release.yml) builds a
+   universal macOS binary and publishes the release.
+2. In [privitera/homebrew-tap](https://github.com/privitera/homebrew-tap),
+   point `Formula/arcade.rb` at the new tarball, update `sha256`
+   (`curl -sL <url> | shasum -a 256`), run
+   `brew audit --strict privitera/tap/arcade`, and push.
+
 ## License
 
-MIT — see individual `NOTICE` files in each cart for any third-party
-attribution. Sprite assets in `skifree/` derive from
+MIT, see [`LICENSE`](./LICENSE) and the `NOTICE` files in each cart for any
+third-party attribution. Sprite assets in `skifree/` derive from
 [`basicallydan/skifree.js`](https://github.com/basicallydan/skifree.js)
 (MIT) and are distributed in homage to Chris Pirih's original 1991 game.

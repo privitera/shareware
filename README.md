@@ -17,6 +17,15 @@ Drop it in `C:\Windows\System32\`, then go to your screensaver options — you'l
 
 A small Rust workspace with a console-and-cartridge architecture. Five carts ship out of the box: SkiFree, Pong, Breakout, Snake, and a sketch pad. Each runs standalone, or all five together in a bundled cabinet with a home screen and a satisfying CRT shutdown when you exit.
 
+On a Mac, install it with Homebrew:
+
+```bash
+brew install privitera/tap/arcade
+arcade
+```
+
+Or run it from source:
+
 ```bash
 cd arcade
 cargo run -p cabinet     # the full console
